@@ -4,7 +4,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 import hmac
+import logging
 import os
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 MCP_API_TOKEN = os.environ.get("MCP_API_TOKEN")
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
@@ -46,6 +50,7 @@ class BearerAuthMiddleware:
 
         headers = dict(scope.get("headers", []))
         auth = headers.get(b"authorization", b"").decode()
+        logger.debug("AUTH path=%s header=%r", scope["path"], auth)
         # constant-time comparison to prevent timing side-channel attacks
         if hmac.compare_digest(auth, f"Bearer {MCP_API_TOKEN}"):
             await self.app(scope, receive, send)
